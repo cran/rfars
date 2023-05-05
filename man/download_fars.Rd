@@ -4,17 +4,19 @@
 \alias{download_fars}
 \title{(Internal) Download FARS data files}
 \usage{
-download_fars(years, dest_raw, dest_prepd)
+download_fars(years, dest_raw, dest_prepd, states)
 }
 \arguments{
 \item{years}{Years to be downloaded, in yyyy (character or numeric formats)}
 
 \item{dest_raw}{Directory to store raw CSV files}
 
-\item{dest_prepd}{Directory to store prepared CSV file}
+\item{dest_prepd}{Directory to store prepared CSV files}
+
+\item{states}{(Optional) Inherits from get_fars()}
 }
 \value{
-Nothing, called for side effects.
+Nothing directly to the current environment. Various CSV files are stored either in a temporary directory or dir as specified by the user.
 }
 \description{
 Download files from NHTSA, unzip, and prepare them.

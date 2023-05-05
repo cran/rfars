@@ -4,13 +4,19 @@
 \alias{get_fars}
 \title{Get FARS data}
 \usage{
-get_fars(years = 2015:2020, states = NULL, dir = NULL, proceed = FALSE)
+get_fars(
+  years = 2011:2021,
+  states = NULL,
+  dir = NULL,
+  proceed = FALSE,
+  cache = NULL
+)
 }
 \arguments{
 \item{years}{Years to be downloaded, in yyyy (character or numeric formats),
-currently limited to 2015-2020 (the default).}
+currently limited to 2011-2021 (the default).}
 
-\item{states}{(Optional) States to keep. Leave as NULL (the default) to keep
+\item{states}{States to keep. Leave as NULL (the default) to keep
 all states. Can be specified as full state name (e.g. "Virginia"),
 abbreviation ("VA"), or FIPS code (51).}
 
@@ -20,10 +26,14 @@ directories and prepared in memory.}
 
 \item{proceed}{Logical, whether or not to proceed with downloading files without
 asking for user permission (defaults to FALSE, thus asking permission)}
+
+\item{cache}{The name of an RDS file to save or use. If the specified file (e.g., 'myFARS.rds')
+exists in 'dir' it will be returned; if not, an RDS file of this name will be
+saved in 'dir' for quick use in subsequent calls.}
 }
 \value{
-A FARS data object (a list with five tibbles: flat, multi_acc,
-    multi_veh, multi_per, events)
+A FARS data object (list of six tibbles: flat, multi_acc,
+    multi_veh, multi_per, events, and codebook), described below.
 }
 \description{
 Bring FARS data into the current environment, whether by downloading it anew
@@ -31,16 +41,16 @@ Bring FARS data into the current environment, whether by downloading it anew
 }
 \details{
 This function downloads raw data from \href{https://www.nhtsa.gov/file-downloads?p=nhtsa/downloads/FARS/}{NHTSA}.
-   If no directory (dir) is specified, raw CSV files are downloaded into the
+   If no directory (dir) is specified, SAS files are downloaded into a
    tempdir(), where they are also prepared, combined, and then brought into
    the current environment. If you specify a directory (dir), the function will
    look there for a 'FARS data' folder. If not found, it will be created and
-   populated with raw and prepared CSV files. If the directory is found, the
+   populated with raw and prepared SAS and RDS files. If the directory is found, the
    function makes sure all requested years are present and asks permission
    to download any missing years.
 
-   The object returned is a list with class 'FARS'. It has five tibbles:
-   flat, multi_acc, multi_veh, multi_per, events.
+   The object returned is a list with class 'FARS'. It contains six tibbles:
+   flat, multi_acc, multi_veh, multi_per, events, and codebook.
 
    Flat files are wide-formatted and presented at the person level.
    All \emph{crashes} involve at least one motor \emph{vehicle}, each of
@@ -51,7 +61,7 @@ This function downloads raw data from \href{https://www.nhtsa.gov/file-downloads
    Some data elements can include multiple values for any data level
    (e.g., multiple weather conditions corresponding to the crash, or multiple
    crash factors related to vehicle or person). These elements have been
-   collected in the yyyy_multi_[acc/veh/per].csv files in long format.
+   collected in the yyyy_multi_[acc/veh/per].rds files in long format.
    These files contain crash, vehicle, and person identifiers, and two
    variables labelled \code{name} and \code{value}. These correspond to
    variable names from the raw data files and the corresponding values,
@@ -60,12 +70,13 @@ This function downloads raw data from \href{https://www.nhtsa.gov/file-downloads
    The events tibble provides a sequence of events for all vehicles involved
    in the crash. See Crash Sequences vignette for an example.
 
-   Consult the \href{https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/813254}{Analytical User’s Manual}
-   for more information.
+   Finally, the codebook tibble serves as a searchable codebook for all files of any given year.
+
+   Please review the [FARS Analytical User's Manual](https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/813417) for more information.
 }
 \examples{
 \donttest{
-myFARS <- get_fars(years = 2019:2020, states = "51")
-myFARS <- get_fars(years = 2020, states = "NC")
+myFARS <- get_fars(years = 2019:2021, states = "51")
+myFARS <- get_fars(years = 2021, states = "NC")
 }
 }

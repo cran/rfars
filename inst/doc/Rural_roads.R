@@ -11,7 +11,7 @@ library(ggplot2)
 library(magrittr)
 
 ## ---- warning=FALSE-----------------------------------------------------------
-myFARS <- get_fars(years = 2018:2020, states = "VA")
+myFARS <- get_fars(years = 2019:2021, states = "VA")
 
 ## -----------------------------------------------------------------------------
 myFARS$flat$per_typ <- 
@@ -22,34 +22,21 @@ myFARS$flat$per_typ <-
          myFARS$flat$per_typ)
 
 ## -----------------------------------------------------------------------------
-compare_counts <- function(myFARS, what, involved=NULL){
-  
-  bind_rows(
-    counts(myFARS, what=what, involved=involved, where="rural") %>%
-      mutate(where = "Rural"),
-    counts(myFARS, what=what, involved=involved, where="urban") %>%
-      mutate(where = "Urban")
-    ) %>%
-  return()
-  
-}
+compare_counts(df = myFARS, what = "crashes", where = list(states="VA", urb="rural"), where2 = list(states="VA", urb = "urban")) %>%
 
-## -----------------------------------------------------------------------------
-compare_counts(myFARS, "crashes") %>%
-
-ggplot(aes(x=date, y=n, label=scales::comma(n))) + 
+ggplot(aes(x=factor(year), y=n, label=scales::comma(n))) + 
   geom_col() + 
   geom_label(vjust=1) +
-  facet_wrap(.~where) +
+  facet_wrap(.~urb) +
   labs(x=NULL, y=NULL, title = "Crashes", fill=NULL)
 
 ## -----------------------------------------------------------------------------
-compare_counts(myFARS, "fatalities") %>%
+compare_counts(df = myFARS, what = "fatalities", where = list(urb="rural"), where2 = list(urb="urban")) %>%
   
-ggplot(aes(x=date, y=n, label=scales::comma(n))) + 
+ggplot(aes(x=factor(year), y=n, label=scales::comma(n))) + 
   geom_col() + 
   geom_label(vjust=1) +
-  facet_wrap(.~where) +
+  facet_wrap(.~urb) +
   labs(x=NULL, y=NULL, title = "Fatalities", fill=NULL)
 
 ## ---- warning=FALSE-----------------------------------------------------------
@@ -64,10 +51,10 @@ crashfactors <- c("distracted driver", "drowsy driver",
 for(crashfactor in crashfactors){
   
   p <- 
-    compare_counts(myFARS, "fatalities", involved = crashfactor) %>%
-    ggplot(aes(x=year, y=n, label=scales::comma(n))) +
+    compare_counts(df = myFARS, what = "fatalities", where = list(urb="rural"), where2 = list(urb="urban"), involved = crashfactor) %>%
+    ggplot(aes(x=factor(year), y=n, label=scales::comma(n))) +
       geom_col(position="dodge") +
-      facet_wrap(.~where) +
+      facet_wrap(.~urb) +
       geom_label(position = position_dodge(.9), vjust=1) +
       labs(title = paste0("Fatalities: ", crashfactor))
 
@@ -79,7 +66,7 @@ for(crashfactor in crashfactors){
 bind_rows(
   counts(myFARS,
        what = "crashes",
-       where = "rural",
+       where = list(urb="rural"),
        filterOnly = TRUE
        ) %>%
     filter(veh_no==1) %>% #crash type is on the vehicle-level, this prevents over-counting
@@ -87,7 +74,7 @@ bind_rows(
     mutate(where = "Rural"),
   counts(myFARS,
        what = "crashes",
-       where = "urban",
+       where = list(urb="urban"),
        filterOnly = TRUE
        ) %>%
     filter(veh_no==1) %>%
@@ -130,7 +117,7 @@ myFARS$flat %>%
 ggplot(aes(x=valign, y=vprofile, fill=n, label=scales::comma(n))) +
   #geom_tile() +
   facet_wrap(.~rur_urb) +
-  viridis::scale_fill_viridis() +
+  viridis::scale_fill_viridis(alpha=.5) +
   geom_label() +
   labs(title = "Roadway Profile and Alignment")
 
@@ -142,16 +129,16 @@ myFARS$flat %>%
   group_by(rur_urb, per_typ) %>%
   summarise(n=n()) %>%
   filter(n>2) %>%
-  mutate(per_typ = stringr::str_wrap(per_typ, 15)) %>%
+  #mutate(per_typ = stringr::str_wrap(per_typ, 15)) %>%
   
-  ggplot(aes(x=per_typ, y=n, fill=rur_urb, label = scales::comma(n))) +
+  ggplot(aes(y=per_typ, x=n, fill=rur_urb, label = scales::comma(n))) +
     geom_col(position = "dodge") +
-    geom_label(vjust=1, position = position_dodge(.9)) +
-    labs(title = "Fatalities by Person Type and Urbanicity")
+    #geom_label(hjust=-1, position = position_dodge(.9)) +
+    labs(title = "Fatalities by Person Type and Urbanicity") 
 
 ## -----------------------------------------------------------------------------
 myFARS$flat %>%
-  filter(rur_urb %in% c("Rural", "Urban")) %>%
+  filter(rur_urb %in% c("Rural", "Urban"), sex %in% c("Male", "Female")) %>%
   filter(grepl("(K)", inj_sev)) %>%
   group_by(rur_urb, sex) %>%
   summarise(n=n()) %>%
@@ -172,44 +159,23 @@ myFARS$flat %>%
   filter(n>10) %>%
   mutate(hispanic = stringr::str_wrap(hispanic, 15)) %>%
   
-  ggplot(aes(x=hispanic, y=n, fill=rur_urb, label = scales::comma(n))) +
+  ggplot(aes(y=hispanic, x=n, fill=rur_urb, label = scales::comma(n))) +
     geom_col(position = "dodge") +
-    geom_label(vjust=1, position = position_dodge(.9)) +
+    geom_label(hjust=-1, position = position_dodge(.9)) +
     labs(title = "Fatalities by Ethnicity and Urbanicity")
 
 ## -----------------------------------------------------------------------------
 myFARS$flat %>%
-  filter(rur_urb %in% c("Rural", "Urban")) %>%
-  filter(grepl("(K)", inj_sev)) %>%
-  filter(!(per_typ %in% c("Bicyclist", "Pedestrian"))) %>%
-  group_by(rur_urb, body_typ) %>%
-  summarise(n=n()) %>%
-  filter(n>30) %>%
-  mutate(body_typ = stringr::str_wrap(body_typ, 80)) %>%
-
-  ggplot(aes(y=body_typ, x=n, fill=rur_urb, label=scales::comma(n, accuracy = 1))) + 
-    geom_col(position = "dodge") + 
-    geom_label(hjust=1, position = position_dodge(.9)) +
-    labs(title = "Fatalities by Vehicle Type and Urbanicity")
-
-## -----------------------------------------------------------------------------
-myFARS$flat %>%
-  filter(grepl("(K)", inj_sev), 
-         rur_urb %in% c("Rural", "Urban")) %>%
-  mutate(age_n = gsub("\\D+","", age) %>% as.numeric()) %>%
-  group_by(rur_urb, age_n) %>% summarize(n=n()) %>%
-  filter(age_n <=90) %>%
-  
-  ggplot(aes(x=age_n, y=n, color = rur_urb)) +
-    geom_line(size=1.2, alpha=.8) +
-    labs(title = "Fatalities by Age and Urbanicity")
-
-## -----------------------------------------------------------------------------
-myFARS$flat %>%
-  mutate(age_n = gsub("\\D+","", age) %>% as.numeric()) %>%
+  mutate(
+    age_n = gsub("\\D+","", age) %>% as.numeric(),
+    hour2 = stringr::word(hour, 1, 1, sep = ":") %>% as.numeric(),
+    hourm = stringr::str_sub(hour, -2, -1),
+    hour = ifelse(hourm=="am", hour2, hour2+12),
+    hour = ifelse(hour==24, 12, hour)
+    ) %>%
   filter(grepl("(K)", inj_sev),
          rur_urb %in% c("Rural", "Urban"),
-         hour < 25,
+         hour < 24,
          age_n <= 90) %>%
   group_by(rur_urb, age_n, hour) %>% summarize(n=n()) %>%
   
@@ -221,18 +187,23 @@ myFARS$flat %>%
 
 ## -----------------------------------------------------------------------------
 myFARS$multi_per %>% 
-  filter(name == "race") %>%
-  select(state, st_case, veh_no, per_no, year, race=value) %>%
+  filter(name == "mtm_crsh") %>%
+  select(state, st_case, veh_no, per_no, year, mtm_crsh=value) %>%
+  mutate_at(c("st_case", "veh_no", "per_no", "year"), as.numeric) %>%
   inner_join(myFARS$flat) %>%
   
   filter(rur_urb %in% c("Rural", "Urban")) %>%
   filter(grepl("(K)", inj_sev)) %>%
-  group_by(rur_urb, race) %>%
+  group_by(rur_urb, mtm_crsh) %>%
   summarise(n=n()) %>%
   filter(n>9) %>%
-  mutate(race = stringr::str_wrap(race, 15)) %>%
+  mutate(mtm_crsh = stringr::str_wrap(mtm_crsh, 25)) %>%
   
-  ggplot(aes(x=race, y=n, fill=rur_urb, label = scales::comma(n))) +
+  ggplot(aes(y=mtm_crsh, x=n, fill=rur_urb, label = scales::comma(n))) +
     geom_col(position = "dodge") +
-    geom_label(vjust=1, position = position_dodge(.9))
+    #geom_label(vjust=1, position = position_dodge(.9)) +
+    labs(title = "Non-Motorist Contributing Circumstances")
+
+## -----------------------------------------------------------------------------
+
 
