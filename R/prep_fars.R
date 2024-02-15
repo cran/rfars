@@ -28,8 +28,15 @@ prep_fars <- function(y, wd, rawfiles, prepared_dir, states){
   fars.nmcrash <- fars.nmimpair <- fars.nmprior <- fars.nmdistract <-
     fars.drugs <- fars.race <- fars.personrf <- NULL
 
-  if(y %in% 2016:2021)          my_catfile <- paste0(wd, "format-64/formats.sas7bcat")
-  if(y %in% c(2011, 2014:2015)) my_catfile <- paste0(wd, "formats.sas7bcat")
+  my_catfile <-
+    data.frame(filename = list.files(wd, recursive = T, full.names = T)) %>%
+    filter(stringr::str_detect(.data$filename, "sas7bcat")) %>%
+    arrange(desc(.data$filename)) %>%
+    slice(1) %>%
+    as.character()
+
+  # if(y %in% 2016:2021)          my_catfile <- paste0(wd, "format-64/formats.sas7bcat")
+  # if(y %in% c(2011, 2014:2015)) my_catfile <- paste0(wd, "formats.sas7bcat")
   if(y %in% 2012:2013)          my_catfile <- FALSE
 
   if(!is.null(states)){
@@ -244,7 +251,9 @@ prep_fars <- function(y, wd, rawfiles, prepared_dir, states){
       ) %>%
     as.data.frame() %>%
     filter(!(.data$value %in% c("None", "Unknown", "Not Reported", "No Additional Atmospheric Conditions"))) %>%
-    mutate(year = y)
+    mutate(year = y) %>%
+    mutate_at(c("st_case", "year"), as.numeric) %>%
+    inner_join(select(flat, "st_case", "year") %>% distinct(), by = c("st_case", "year"))
 
 
   ## Vehicle-level ----
@@ -268,7 +277,9 @@ prep_fars <- function(y, wd, rawfiles, prepared_dir, states){
   multi_veh <-
     as.data.frame(multi_veh) %>%
     filter(!(.data$value %in% c("None", "Unknown", "Not Reported"))) %>%
-    mutate(year = y)
+    mutate(year = y) %>%
+    mutate_at(c("st_case", "year"), as.numeric) %>%
+    inner_join(select(flat, "st_case", "year") %>% distinct(), by = c("st_case", "year"))
 
 
   ## Person-level ----
@@ -292,14 +303,18 @@ prep_fars <- function(y, wd, rawfiles, prepared_dir, states){
   multi_per <-
     as.data.frame(multi_per) %>%
     filter(!(.data$value %in% c("None", "Unknown", "Not Reported"))) %>%
-    mutate(year = y)
+    mutate(year = y) %>%
+    mutate_at(c("st_case", "year"), as.numeric) %>%
+    inner_join(select(flat, "st_case", "year") %>% distinct(), by = c("st_case", "year"))
 
 
   ## Events ----
 
   soe <-
     as.data.frame(fars.vsoe) %>%
-    mutate(year = y)
+    mutate(year = y) %>%
+    mutate_at(c("st_case", "year"), as.numeric) %>%
+    inner_join(select(flat, "st_case", "year") %>% distinct(), by = c("st_case", "year"))
 
 
 # return ----

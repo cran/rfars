@@ -54,14 +54,15 @@
 #'
 #'    Finally, the codebook tibble serves as a searchable codebook for all files of any given year.
 #'
-#'    Please review the [FARS Analytical User's Manual](https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/813417) for more information.
+#'    Please review the \href{https://crashstats.nhtsa.dot.gov/Api/Public/ViewPublication/813417}{FARS Analytical User's Manual}
 #'
 #'
 #' @examples
-#' \donttest{
-#' myFARS <- get_fars(years = 2019:2021, states = "51")
-#' myFARS <- get_fars(years = 2021, states = "NC")
-#' }
+#'
+#'   \dontrun{
+#'     myFARS <- get_fars(years = 2021, states = "VA")
+#'   }
+
 
 get_fars <- function(years   = 2011:2021,
                      states  = NULL,

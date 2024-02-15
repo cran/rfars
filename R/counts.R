@@ -30,15 +30,11 @@
 #' @importFrom rlang .data
 #'
 #' @examples
-#' \donttest{
 #'
-#' get_fars(years = 2020) %>%
-#'    counts(where = list(states="Virginia", urb="rural"))
-#'
-#' get_fars(years = 2020) %>%
-#'    counts(where=list(states="FL"), involved = "older driver")
-#'
-#' }
+#'   \dontrun{
+#'     counts(get_fars(years = 2019), where = list(states="Virginia", urb="rural"))
+#'   }
+
 
 
 counts <- function(df,
