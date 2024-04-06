@@ -1,4 +1,4 @@
-## ---- include = FALSE---------------------------------------------------------
+## ----include = FALSE----------------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -11,19 +11,19 @@ library(ggplot2)
 library(magrittr)
 library(tidyr)
 
-## ---- warning=FALSE-----------------------------------------------------------
+## ----warning=FALSE------------------------------------------------------------
 mydata <- rfars::get_gescrss(years=2021, regions = "s")
 
 my_events <- mydata$events
 
-## ---- results='asis'----------------------------------------------------------
+## ----results='asis'-----------------------------------------------------------
 my_events %>%
   group_by(soe) %>% summarize(n=n()) %>%
   arrange(desc(n)) %>%
   slice(1:10) %>%
   knitr::kable(format = "html")
 
-## ---- results='asis'----------------------------------------------------------
+## ----results='asis'-----------------------------------------------------------
 my_events %>%
   select(-aoi) %>%
   pivot_wider(names_from = "veventnum", values_from = "soe", values_fill = "x",
@@ -36,7 +36,7 @@ my_events %>%
   select(event1, event2, n) %>%
   knitr::kable(format = "html")
 
-## ---- fig.height=10, fig.width=12---------------------------------------------
+## ----fig.height=10, fig.width=12----------------------------------------------
 my_events %>%
   group_by(year, casenum, veh_no) %>%
   dplyr::rename(event_to = soe) %>%

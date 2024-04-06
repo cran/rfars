@@ -1,4 +1,4 @@
-## ---- echo=F, message=F, warning=F--------------------------------------------
+## ----echo=F, message=F, warning=F---------------------------------------------
 knitr::opts_chunk$set(echo = F)
 library(rfars)
 library(stringr)
@@ -6,13 +6,14 @@ library(dplyr)
 library(knitr)
 library(tidyr)
 
-## ---- eval=F, echo=T----------------------------------------------------------
+## ----eval=F, echo=T-----------------------------------------------------------
 #  View(rfars::fars_codebook)
 #  View(rfars::gescrss_codebook)
 
-## ---- results='asis', warning=F, message=F------------------------------------
+## ----results='asis', warning=F, message=F-------------------------------------
 temp <-
   fars_codebook %>%
+  mutate(value_label = gsub("`", "", value_label)) %>%
   separate_rows(years) %>%
   rename(year=years) %>%
   filter(!(name_ncsa %in% c("VPICMODEL", "MAK_MOD", "STATE", "VPICMAKE", "ALC_RES", "DR_WGT", "AGE", "PBAGE", "DRUGRES1", "DRUGRES2", "DRUGRES3", "TRAV_SP"))) %>%
